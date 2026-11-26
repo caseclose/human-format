@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>human-format · 中文汇报去AI味与工程重构</title>
+  <meta name="description" content="面向中文周报、月报与技术汇报的Agent Skill：去除中英数字间空格、模板套娃、空话与内部黑话，突出可验证进展并挂载在线看板。">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark">HF</span>
+        <span class="brand-name">human-format</span>
+      </a>
+      <nav class="nav-links" aria-label="页面导航">
+        <a href="#playground">在线试用</a>
+        <a href="#rules">核心规则</a>
+        <a href="#examples">改前改后</a>
+        <a href="#cli">脚本与安装</a>
+        <a class="nav-cta" href="https://github.com/caseclose/human-format" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">AGENT SKILL · MIT LICENSE · ZERO DEPENDENCY</div>
+          <h1>写中文技术周报，<br>像工程师一样克制、有据、好读。</h1>
+          <p class="hero-lead">
+            <code>human-format</code>是一个专为中文周报、月报、项目同步与向上汇报设计的Agent Skill。它清掉一眼就能看出的AI排版习惯（中英空格、<code>**小标题**：</code>套娃、空洞拔高），并把研发流水账重构为“成果前置+黑话降维+可验证链接”的工程表达。
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#playground">立即在线检测与改写</a>
+            <button class="btn btn-secondary" id="copy-install" data-copy="git clone https://github.com/caseclose/human-format.git ~/.cursor/skills/human-format">
+              复制安装命令
+            </button>
+            <span class="copy-hint" id="install-feedback" aria-live="polite"></span>
+          </div>
+          <div class="install-box">
+            <span class="install-label">安装到Cursor / Claude Code技能目录</span>
+            <code>git clone https://github.com/caseclose/human-format.git ~/.cursor/skills/human-format</code>
+          </div>
+        </div>
+
+        <aside class="hero-card" aria-label="一眼对比示例">
+          <div class="compare-mini bad">
+            <div class="mini-head"><span class="dot dot-red"></span>典型AI周报味</div>
+            <p>本周整体工作围绕既定目标有序推进，主要成果如下：</p>
+            <p>- <strong>推理性能优化</strong>：通过合理的参数调优，在 <mark class="hl-space">Qwen3-4B </mark>上显著提升了服务吞吐，<mark class="hl-space">P99 </mark>从 <mark class="hl-space">420ms </mark>大幅降至 <mark class="hl-space">180ms</mark>，为后续上线奠定坚实基础。</p>
+          </div>
+          <div class="compare-arrow" aria-hidden="true">↓ human-format</div>
+          <div class="compare-mini good">
+            <div class="mini-head"><span class="dot dot-green"></span>工程师书面语</div>
+            <p class="mini-title">### 本周完成</p>
+            <p>- 完成Qwen3-4B推理服务参数调整与压测，QPS达到120，P99延迟从420ms降到180ms。</p>
+          </div>
+          <div class="mini-stats">
+            <div><strong>0</strong><span>中英数字多余空格</span></div>
+            <div><strong>0</strong><span>外部Python依赖</span></div>
+            <div><strong>7/7</strong><span>单元测试全部覆盖</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="playground">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">INTERACTIVE CHECKER</div>
+            <h2>在线检测与一键清理</h2>
+            <p>客户端1:1复刻<code>scripts/check_spacing.py</code>状态机（自动跳过代码块、行内代码、URL、邮箱与<code>human-format:off</code>区域），同时标出模板套娃与空洞套话。</p>
+          </div>
+          <div class="preset-group" role="group" aria-label="示例模板">
+            <button class="chip is-active" data-preset="weekly">常规AI周报</button>
+            <button class="chip" data-preset="tech">技术黑话周报</button>
+            <button class="chip" data-preset="protected">代码块与URL边界</button>
+          </div>
+        </div>
+
+        <div class="playground-grid">
+          <div class="pane">
+            <div class="pane-bar">
+              <span>原文输入</span>
+              <span class="pane-meta" id="input-stats">0字</span>
+            </div>
+            <textarea id="source-input" spellcheck="false" aria-label="输入待检查的中文汇报文本"></textarea>
+            <div class="pane-footer">
+              <div class="action-row">
+                <button class="btn btn-primary btn-sm" id="btn-fix-spacing">修复中英空格</button>
+                <button class="btn btn-secondary btn-sm" id="btn-fix-all">同时去模板前缀与Emoji</button>
+              </div>
+              <button class="btn-link" id="btn-clear">清空</button>
+            </div>
+          </div>
+
+          <div class="pane">
+            <div class="pane-bar">
+              <span>检测结果与改后预览</span>
+              <div class="badge-row" id="diag-badges"></div>
+            </div>
+            <div class="preview-tabs" role="tablist">
+              <button class="tab-btn is-active" data-tab="highlight" role="tab" aria-selected="true">问题定位视图</button>
+              <button class="tab-btn" data-tab="output" role="tab" aria-selected="false">修复后纯文本</button>
+            </div>
+            <div class="pane-body" id="highlight-view"></div>
+            <textarea class="output-area hidden" id="fixed-output" readonly aria-label="修复后的文本"></textarea>
+            <div class="pane-footer">
+              <span class="diag-summary" id="diag-summary">正在等待输入…</span>
+              <button class="btn btn-secondary btn-sm" id="btn-copy-output">复制修复结果</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="diag-list" id="diag-list" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="rules">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">CORE PRINCIPLES</div>
+            <h2>五大核心规则</h2>
+            <p>兼顾排版整洁与技术汇报信息密度，改写法不篡改原稿里的任何真实数据与边界。</p>
+          </div>
+        </div>
+
+        <div class="rules-grid">
+          <article class="rule-card">
+            <span class="rule-num">01</span>
+            <h3>汉字与英文、数字紧挨</h3>
+            <p>清除中文与拉丁字母、阿拉伯数字之间的机械空格，如<code>Qwen3-4B</code>、<code>177.73tok/s</code>、<code>3个</code>；英文词间空格（如<code>Spec V2</code>、<code>Online FP8</code>）照常保留。</p>
+          </article>
+          <article class="rule-card">
+            <span class="rule-num">02</span>
+            <h3>去掉前缀套娃与装饰符</h3>
+            <p>保留标题层级与分组，砍掉每条复读的<code>**模块名**：说明</code>前缀、<code>✅🚀📌</code>等装饰emoji和普通名词双引号，长短按事情重要度自然区分。</p>
+          </article>
+          <article class="rule-card">
+            <span class="rule-num">03</span>
+            <h3>只留动作与可验证结果</h3>
+            <p>删掉“显著提升、稳步推进、奠定坚实基础”等无数字支撑的空话，删掉公文开头结尾；风险项写明卡点、缺口资源与需要拍板的事项。</p>
+          </article>
+          <article class="rule-card">
+            <span class="rule-num">04</span>
+            <h3>黑话降维与成果前置</h3>
+            <p>顶部单列<code>主要进展</code>；当方向切换时先摆评测数据说明“为什么转”。把内部类名、参数flag、生僻简称译成通用工程表达，裁掉commit哈希与早期单步loss噪音。</p>
+          </article>
+          <article class="rule-card">
+            <span class="rule-num">05</span>
+            <h3>先探活再挂看板链接</h3>
+            <p>涉及实验对照或画廊时，先探测本地监听端口并确认HTTP返回<code>200</code>，再将真实URL作为Markdown链接挂到对应章节，绝不凭记忆硬拼死链。</p>
+          </article>
+          <article class="rule-card rule-card-safe">
+            <span class="rule-num">SAFE</span>
+            <h3>严格保护区原样不动</h3>
+            <p>YAML frontmatter、围栏代码块、单/多反引号行内代码、文件路径、URL、邮箱、逐字引用和带空格官方专有名词全程跳过，绝不粘连或损坏。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="examples">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">BEFORE &amp; AFTER</div>
+            <h2>典型改写对照</h2>
+            <p>覆盖常规周报去套话、风险直写，以及复杂技术周报的术语降维与目标转向重构。</p>
+          </div>
+          <div class="preset-group" role="group" aria-label="对照场景切换">
+            <button class="chip is-active" data-example="ex-tech">技术周报降维重构</button>
+            <button class="chip" data-example="ex-weekly">常规周报去AI味</button>
+            <button class="chip" data-example="ex-risk">风险与需协调直写</button>
+          </div>
+        </div>
+
+        <div class="example-stage" id="example-stage"></div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="cli">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">CLI &amp; AUTOMATION</div>
+            <h2>配套脚本与仓库集成</h2>
+            <p><code>scripts/check_spacing.py</code>仅依赖Python标准库，可直接接进本地检查、管道或CI门禁。</p>
+          </div>
+        </div>
+
+        <div class="cli-grid">
+          <div class="cli-card">
+            <h3>1. 安装到Agent技能目录</h3>
+            <pre><code>git clone https://github.com/caseclose/human-format.git ~/.cursor/skills/human-format
+# 或 Claude Code 目录：
+cp -r ~/.cursor/skills/human-format ~/.claude/skills/human-format</code></pre>
+            <p>安装后在写周报、月报或向上同步时会自动触发，也可以直接点名“用<code>human-format</code>润色这段周报”。</p>
+          </div>
+
+          <div class="cli-card">
+            <h3>2. 检查、管道与原地修复</h3>
+            <pre><code>python3 scripts/check_spacing.py report.md
+cat draft.md | python3 scripts/check_spacing.py -
+python3 scripts/check_spacing.py --fix report.md</code></pre>
+            <p>检查模式命中多余空格时返回退出码<code>1</code>，方便直接挂入pre-commit或GitHub Actions。</p>
+          </div>
+
+          <div class="cli-card">
+            <h3>3. 局部豁免注释</h3>
+            <pre><code>&lt;!-- human-format:off --&gt;
+故意展示的 错误 1 次示例
+&lt;!-- human-format:on --&gt;
+
+单行跳过示例 1 次 &lt;!-- human-format:ignore --&gt;</code></pre>
+            <p>仅HTML注释指令生效，正文里提到指令字面量不会误关检查。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div>
+        <strong>human-format</strong> · MIT License · 面向中文工程汇报的Agent Skill
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/caseclose/human-format" target="_blank" rel="noopener noreferrer">GitHub仓库</a>
+        <a href="https://github.com/caseclose/human-format/blob/main/SKILL.md" target="_blank" rel="noopener noreferrer">SKILL.md</a>
+        <a href="https://github.com/caseclose/human-format/blob/main/examples.md" target="_blank" rel="noopener noreferrer">examples.md</a>
+        <a href="https://github.com/caseclose/human-format/blob/main/scripts/check_spacing.py" target="_blank" rel="noopener noreferrer">check_spacing.py</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

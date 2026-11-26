@@ -2,6 +2,8 @@
 
 面向中文周报、月报和向上汇报的Agent Skill，清掉一眼就能看出的AI生成痕迹，同时保留汇报原本的标题分组和可读性。
 
+在线主页与交互试用：[https://caseclose.github.io/human-format/](https://caseclose.github.io/human-format/)
+
 ## 解决哪些问题
 
 大模型写工作汇报有几个固定毛病：汉字与英文、数字之间自动插空格（`Qwen3-4B 上做到 3.3 倍`）；每条列表都套`**小标题**：说明`；不管事情大小硬凑几条差不多长的；动辄写“显著提升、稳步推进、奠定坚实基础”，遇到风险就写“关注潜在瓶颈、做好预案”。
@@ -47,6 +49,7 @@ python3 scripts/check_spacing.py --fix report.md
 human-format/
 ├── SKILL.md              技能本体
 ├── examples.md           周报与汇报改前改后对照
+├── docs/                 GitHub Pages静态主页与在线检测器
 ├── scripts/
 │   └── check_spacing.py  中英数字空格检查与修复脚本
 ├── tests/
