@@ -62,3 +62,24 @@ DFlash 是 Z Lab 提出的块扩散 drafter，在 Qwen3-4B 上实现了 3.3 倍�
 
 - 命令行与路径：`` `docker run -it --rm my/image:tag` ``、`/var/log/nginx/error.log`
 - 裸链接：在周报中附带 `https://example.com/report/2026-w47` 时，保留链接前后边界，避免把中文粘到URL末尾导致链接失效。
+
+## 技术周报重构（黑话降维、目标转向与挂看板链接）
+
+改前（过程细节过碎、内部黑话多、缺少主线转向说明与可视化入口）：
+
+<!-- human-format:off -->
+```text
+### Agent 训推评测与 SFT 训练
+- 在 `cervol/develop-sft-rl`（commit `86e346c`）新增 `wandb_metrics.py` 修复多段奖励重复累加 Bug（24 项 CPU 单测通过）。在 `RL-Parity` 下评测 `RL-120` 发现 Knowledge 85.53% vs 88.35%，产后 `image_inspect` 从 82 跌至 1 题。
+- 在 `cervol/sft-concise-all-seats` 排查了 `tool_aux` 缺失与 `本轮信息计划` 误入 loss 的问题，回放补采 1,113 条非 verifier 子槽位样本（12 项单测通过），在 4×8 H20 解决 `attention_backend=auto` 的 `NaN` 后训至 step 40/1908，lm_loss 从 1.542 降至 1.059。
+```
+<!-- human-format:on -->
+
+改后（突出目标转向依据、术语降维、裁剪过程细节并附上已探活的看板链接）：
+
+> ### Service Agent目标转向：从主攻美学/知识切换至推理速度优先
+>
+> 可视化看板：[600题训推一致对比看板](http://example.internal:18833/dashboard/results.html)
+>
+> - 完成`AgentRL Step120`在600题上的训推一致（`RL-Parity`）对比并修复多段轨迹奖励重复累加Bug。评测显示，此前以美学/知识为主目标的RL模型知识分落后基线2.82pp（85.53% vs 88.35%）、出图后自主检视退化（82→1题），且中位输出Token反超10%~15%（909 vs 826）；而精简数据版SFT输出最短且一致性最高（93.52%）。基于此，本周将后续优化重心切换为在保质量前提下压低Token与轮数、优先提升推理速度。
+> - 补齐1,113条非校验类工具子调用样本，构建覆盖外层主控与7类工具内部子调用的精简数据集（30,538条训练/7,822条验证），将工具轮冗余文本降至0.0%；屏蔽辅助拼接消息loss并解决H20硬件上FlashAttention后端切换导致的梯度溢出（`NaN`）后，已在32卡H20稳定开训（单步31.8s，MFU 45.6%~47.1%）。

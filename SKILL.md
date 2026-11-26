@@ -1,11 +1,14 @@
 ---
 name: human-format
-description: "Use when writing or polishing Chinese weekly reports, monthly reports, project syncs, or upward status reports to remove AI tells such as Han-ASCII spacing, bold-prefix list templates, and empty filler. Do not auto-trigger for general coding or repository diff replies."
+description: "Polish and restructure Chinese weekly reports, monthly reports, project syncs, and upward status reports. Removes AI formatting tells (Han-ASCII spacing, bold-prefix list templates, empty filler), translates obscure internal code names and jargon into clear engineering language, highlights quantified progress and goal pivots, and verifies/attaches live visualization dashboard links. Use when writing or polishing Chinese work reports; do not auto-trigger for general coding or repository diff replies."
 ---
 
-# 中文汇报去AI味排版
+# 中文汇报去AI味与工程重构
 
-给上级看的周报、月报和项目进度同步，既要保留清晰的标题分组和列表结构以便快速扫读，又要清掉大模型最容易露馅的几类机械痕迹：中英数字间的空格、对称复读的`**小标题**：说明`列表、没有数据支撑的拔高空话，以及开头结尾的公文套话。
+给上级或跨团队看的周报、月报和项目进度同步，既要保留清晰的标题分组和列表结构以便快速扫读，又要同时解决两类常见毛病：
+
+1. **排版与用词的AI痕迹**：中英数字间多余空格、对称复读的`**小标题**：说明`列表、没有数据支撑的拔高空话、开头结尾公文套话。
+2. **研发视角的“自嗨式”流水账**：堆砌内部类名/配置flag/冷僻简称让非直接参与者看不懂，缺少成果前置与阶段目标切换依据，或者漏附现成的在线可视化看板。
 
 ## 排版与空格
 
@@ -33,9 +36,25 @@ description: "Use when writing or polishing Chinese weekly reports, monthly repo
 - 删掉论文式过渡词，如“值得注意的是、与此同时、基于上述考虑、综上所述、整体来看、不难发现”。
 - 风险与卡点写具体：点明卡在哪个环节、缺什么资源、需要哪位同事或上级拍板什么，不写“需关注潜在瓶颈、建议提前做好预案”这类圆滑套话。
 
+## 技术内容重构（成果前置、降维翻译与过程裁剪）
+
+面向技术周报与实验进展汇报时，在不丢失关键指标的前提下优化信息密度与跨读者可读性：
+
+- **成果前置与目标转向显式化**：复杂周报顶部单列`主要进展`（3~4条），每条压缩为“核心动作+前后量化对比+交付状态”。当阶段目标或优化优先级发生切换时（如从冲刺质量指标转向推理速度优先），先用实测数据说明为什么转，再写新目标下的对齐动作。
+- **内部黑话与冷僻术语降维翻译**：把只有当事开发者熟悉的内部类名、脚本配置参数（flag）、仓库内部简称或易产生歧义的简称，改写成通用工程/算法原理描述；业界通用缩写与专有名词（如`TTFT`、`P90`、`SSIM`、`MFU`、`Online FP8`、`Scheduled Sampling`）正常保留。
+  - 例：把内部模块/flag写成原理动作（“分组卷积上下文融合+零初始化恒等热启动”“前缀缓存保留与草稿层KV复用补丁”“多步自回归混合采样训练”）；把内部代号译为通俗名称（`真实线上日志`代替内部日志简称、`工具内部子调用`代替内部槽位简称、`出图后自主检视`代替易产生歧义的简称）。
+- **按汇报粒度裁剪过程细节**：保留评测集规模、采样口径、前后基线对比、盲测胜率与硬件资源前提；主动裁掉Git分支名/commit哈希、临时工作路径、单元测试条数，以及仍在训练初期的中间step号与单步loss数值（合并为“已在N卡稳定开训，单步耗时X，MFU Y%”）。
+
+## 在线可视化看板核验与挂载
+
+涉及实验对比、效果画廊或评测看板的技术汇报，在条件允许时主动核验并附带可访问的网页链接：
+
+- 输出前先检查本地或目标环境正在监听的Web服务与静态目录（例如查看监听端口并确认HTTP返回`200`），标明页面标题或用途（总览看板、规模律诊断页、盲测画廊、评测对照页）。
+- 将验证可用的真实URL作为Markdown链接挂在对应章节标题旁或核心结论末尾；若服务未启动或探活失败，不凭记忆硬拼链接。
+
 ## 改写已有汇报的边界
 
-只删空格、模板壳和空话，严禁篡改或编造原稿里的事实、数字、结论、链接、命令和专有名词。如果原稿某条缺少指标或数据，保持原意精简即可，不要自行补造数字。
+只删空格、模板壳、空话与冗余过程细节，降维翻译只改变“怎么说”，严禁篡改或编造原稿里的事实、数字、基线结论、链接、命令和专有名词。如果原稿某条缺少指标或数据，保持原意精简即可，不要自行补造数字。
 
 如果用户当次明确要求保留中英空格（例如目标平台有“盘古之白”规范），以用户和平台为准，并在回复里说明一句。
 
